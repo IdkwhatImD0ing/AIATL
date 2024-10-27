@@ -29,10 +29,10 @@ export async function GET(request) {
           departure_id: departureId,
           arrival_id: arrivalId,
           outbound_date: outboundDate,
-          return_date: returnDate,
           currency: currency,
           hl: hl,
           api_key: apiKey,
+          type: 2,
         },
         (result) => {
           if (result.error) {

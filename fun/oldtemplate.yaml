@@ -1,0 +1,386 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Sample Action Webhook for use within Dialog Studio by NLX.
+Parameters:
+  ActionVersion:
+    Type: String
+    Default: v2
+    Description: The version of the Dialog Studio variable
+    AllowedValues:
+    - v1
+    - v2
+
+Conditions:
+  IsActionV1:
+    Fn::Equals:
+    - !Ref ActionVersion
+    - v1
+  IsActionV2:
+    Fn::Equals:
+    - !Ref ActionVersion
+    - v2
+
+Resources:
+  # IAM
+
+  ApiGatewayRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: lambda-permissions
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+            Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-webhook'
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - apigateway.amazonaws.com
+          Action:
+          - 'sts:AssumeRole'
+        - Effect: Allow
+          Principal:
+            Service:
+              - lambda.amazonaws.com
+          Action:
+            - 'sts:AssumeRole'
+      Path: /
+      Policies:
+      - PolicyName: log-write-permissions
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:DescribeLogGroups'
+              - 'logs:DescribeLogStreams'
+              - 'logs:PutLogEvents'
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+            Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-webhook'
+
+  # LAMBDA
+
+  WebhookFunction:
+    Type: AWS::Lambda::Function
+    Condition: IsActionV1
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-webhook
+      Environment:
+        Variables:
+          stackName: !Ref AWS::StackName
+      Code:
+        ZipFile: >
+          exports.handler = async (event, context, callback) => {
+            console.log(JSON.stringify(event, null, 2));
+
+            let body = JSON.parse(event.body);
+            let response = {
+              context: event.context || {}
+            };
+
+            // TODO: implement your action here
+            // ex. send an email
+
+            // You can add or update attributes in the context attribute map.
+
+            response.context['KEY1'] = 'VALUE1';
+            response.context['KEY2'] = 1234;
+
+            return successResponse({
+              body: response,
+              callback: callback
+            });
+          };
+
+          /**
+           * NO NEED TO TOUCH ANYTHING BELOW
+           */
+
+          const successResponse = ({
+            body,
+            callback
+          }) => {
+            callback(null, {
+              statusCode: 200,
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(body)
+            });
+          };
+
+          const errorResponse = ({
+            message,
+            responseCode,
+            callback
+          }) => {
+            callback(null, {
+              statusCode: responseCode,
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                errorMessage: message,
+                responseCode: responseCode
+              })
+            });
+          };
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs16.x
+      Timeout: 10
+      MemorySize: 128
+      Handler: index.handler
+
+  WebhookFunction:
+    Type: AWS::Lambda::Function
+    Condition: IsActionV2
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-webhook
+      Environment:
+        Variables:
+          stackName: !Ref AWS::StackName
+
+      Code:
+        ZipFile: >
+          const https = require('https');
+          const querystring = require('querystring');
+          exports.handler = async (event, context, callback) => {
+            console.log(JSON.stringify(event, null, 2));
+
+            let body = JSON.parse(event.body);
+            let response = {
+              context: event.context || {}
+            };
+
+            // TODO: implement your action here
+            // ex. send an email to event.payload.email, with the subject
+            // event.payload.subject and the message event.payload.message
+
+            const emailURL = body.URL || 'https://default-link.com'; // Default URL if none provided
+
+            const mailgunApiKey = process.env.MAILGUN_API_KEY;
+            const mailgunDomain = process.env.MAILGUN_DOMAIN;
+
+            const data = querystring.stringify({
+              from: 'Bill Zhang <no-reply@billzhang.tech>',
+              to: 'billzhangsc@gmail.com',
+              subject: 'Hi',
+              text: `Here is your link: ${emailURL}`,
+              html: `<p>Here is your <a href="${emailURL}">link</a>.</p>`
+            });
+
+            const options = {
+              hostname: 'api.mailgun.net',
+              port: 443,
+              path: `/v3/${mailgunDomain}/messages`,
+              method: 'POST',
+              headers: {
+                'Authorization': 'Basic ' + Buffer.from(`api:${mailgunApiKey}`).toString('base64'),
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': data.length
+              }
+            };
+
+            const sendEmail = () => {
+              return new Promise((resolve, reject) => {
+                const req = https.request(options, (res) => {
+                  let responseData = '';
+                  res.on('data', (chunk) => {
+                    responseData += chunk;
+                  });
+                  res.on('end', () => {
+                    if (res.statusCode === 200) {
+                      resolve(responseData);
+                    } else {
+                      reject(`Mailgun responded with status code ${res.statusCode}: ${responseData}`);
+                    }
+                  });
+                });
+
+                req.on('error', (e) => {
+                  reject(`Problem with request: ${e.message}`);
+                });
+
+                req.write(data);
+                req.end();
+              });
+            };
+
+            try {
+              const mailgunResponse = await sendEmail();
+              console.log('Mailgun response:', mailgunResponse);
+              response.context['EMAIL_STATUS'] = 'SENT';
+            } catch (error) {
+              console.error('Error sending email:', error);
+              response.context['EMAIL_STATUS'] = 'FAILED';
+            }
+
+            return {
+              statusCode: 200,
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(response)
+            };
+          };
+
+          /**
+           * NO NEED TO TOUCH ANYTHING BELOW
+           */
+
+          const successResponse = ({
+            body,
+            callback
+          }) => {
+            callback(null, {
+              statusCode: 200,
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(body)
+            });
+          };
+
+          const errorResponse = ({
+            message,
+            responseCode,
+            callback
+          }) => {
+            callback(null, {
+              statusCode: responseCode,
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                errorMessage: message,
+                responseCode: responseCode
+              })
+            });
+          };
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs16.x
+      Timeout: 10
+      MemorySize: 128
+      Handler: index.handler
+
+  # API GATEWAY
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref ApiGateway
+      Description: !Sub '${AWS::StackName} deployment'
+      StageName: !Ref ActionVersion
+    DependsOn: ApiGateway
+
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Body: !Sub |
+        ---
+        swagger: "2.0"
+        info:
+          version: "1.0.0"
+          title: "Dialog Studio Action - ${AWS::StackName}"
+        schemes:
+        - "https"
+        paths:
+          /webhook:
+            post:
+              summary: invoke an action
+              operationId: invokeAction
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              parameters:
+                - in: body
+                  name: item
+                  description: the webhook request body
+                  required: true
+                  schema:
+                    $ref: '#/definitions/WebhookRequest'
+              responses:
+                '200':
+                  description: the webhook response
+                  schema:
+                    $ref: '#/definitions/WebhookResponse'
+                '400':
+                  description: Bad request
+                  schema:
+                    $ref: '#/definitions/Error'
+                '500':
+                  description: Internal error
+                  schema:
+                    $ref: '#/definitions/Error'
+              x-amazon-apigateway-integration:
+                credentials: "${LambdaExecutionRole.Arn}"
+                uri: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-webhook/invocations"
+                httpMethod: "POST"
+                type: "aws_proxy"
+
+        definitions:
+          WebhookRequest:
+            type: object
+            properties:
+              payload:
+                type: object
+              state:
+                type: object
+              context:
+                type: object
+
+          WebhookResponse:
+            type: object
+            properties:
+              context:
+                type: object
+
+          Error:
+            type: object
+            properties:
+              statusCode:
+                type: string
+              errorType:
+                type: string
+              errorMessage:
+                type: string
+
+    DependsOn: ApiGatewayRole
+
+Outputs:
+  WebhookEndpoint:
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ActionVersion}/webhook"
+
+  TestCommand:
+    Value: !Sub "curl -X POST https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ActionVersion}/webhook -H 'content-type: application/json' -d '{ \"payload\": { \"email\": \"jdoe@example.com\", \"subject\": \"Hello!\", \"message\": \"Hello world!\" }, \"context\": { \"userId\": \"1234\" } }'"

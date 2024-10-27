@@ -134,12 +134,6 @@ export default function Home() {
         formData.arrivalAirport,
       )}&date=${encodeURIComponent(formData.date)}`,
     )
-    // Trigger sendStep for search button
-    if (client && currentStep === 3) {
-      client.sendStep(steps[3].stepId) // Search Flights Button Step ID
-      // Optionally, hide the highlight and side window
-      setCurrentStep(null)
-    }
   }
 
   return (
