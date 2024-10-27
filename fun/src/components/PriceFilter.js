@@ -1,11 +1,11 @@
 // components/PriceFilter.js
 'use client'
 
-import React from 'react'
+import React, {forwardRef} from 'react'
 
-export default function PriceFilter({priceRange, setPriceRange}) {
+const PriceFilter = forwardRef(({priceRange, setPriceRange}, ref) => {
   return (
-    <div className="mb-4">
+    <div className="mb-4" ref={ref}>
       <label className="block text-gray-700 font-medium mb-2">
         Price Range ($)
       </label>
@@ -27,4 +27,6 @@ export default function PriceFilter({priceRange, setPriceRange}) {
       </div>
     </div>
   )
-}
+})
+
+export default PriceFilter

@@ -1,11 +1,11 @@
 // components/ArrivalTimeFilter.js
 'use client'
 
-import React from 'react'
+import React, {forwardRef} from 'react'
 
-export default function ArrivalTimeFilter({arrivalTime, setArrivalTime}) {
+const ArrivalTimeFilter = forwardRef(({arrivalTime, setArrivalTime}, ref) => {
   return (
-    <div className="mb-4">
+    <div className="mb-4" ref={ref}>
       <span className="block text-gray-700 font-medium mb-2">Arrival Time</span>
       <div className="flex flex-col space-y-2">
         <label className="inline-flex items-center">
@@ -47,4 +47,6 @@ export default function ArrivalTimeFilter({arrivalTime, setArrivalTime}) {
       </div>
     </div>
   )
-}
+})
+
+export default ArrivalTimeFilter

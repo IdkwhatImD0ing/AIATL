@@ -2,12 +2,227 @@
 'use client'
 
 import {useRouter, useSearchParams} from 'next/navigation'
-import {useEffect, useState, useMemo} from 'react'
+import {useEffect, useState, useMemo, useRef} from 'react'
 import SortOptions from '../../components/SortOptions'
 import PriceFilter from '../../components/PriceFilter'
 import DepartureTimeFilter from '../../components/DepartureTimeFilter'
 import ArrivalTimeFilter from '../../components/ArrivalTimeFilter'
 import Link from 'next/link'
+import HighlightOverlay from '../../components/HighlightOverlay'
+import SideWindow from '../../components/SideWindow'
+import * as multimodal from '@nlxai/multimodal'
+
+const myFlights = [
+  // Airlines A
+  {
+    id: 1,
+    airline: 'Airways A',
+    flightNumber: 'AA101',
+    departureTime: '06:00 AM',
+    arrivalTime: '10:00 AM',
+    price: 250,
+  },
+  {
+    id: 2,
+    airline: 'Airways A',
+    flightNumber: 'AA102',
+    departureTime: '09:00 AM',
+    arrivalTime: '01:00 PM',
+    price: 300,
+  },
+  {
+    id: 3,
+    airline: 'Airways A',
+    flightNumber: 'AA103',
+    departureTime: '12:00 PM',
+    arrivalTime: '04:00 PM',
+    price: 350,
+  },
+  {
+    id: 4,
+    airline: 'Airways A',
+    flightNumber: 'AA104',
+    departureTime: '03:00 PM',
+    arrivalTime: '07:00 PM',
+    price: 400,
+  },
+  {
+    id: 5,
+    airline: 'Airways A',
+    flightNumber: 'AA105',
+    departureTime: '06:00 PM',
+    arrivalTime: '10:00 PM',
+    price: 450,
+  },
+
+  // Airlines B
+  {
+    id: 6,
+    airline: 'Airways B',
+    flightNumber: 'BB201',
+    departureTime: '07:30 AM',
+    arrivalTime: '11:30 AM',
+    price: 280,
+  },
+  {
+    id: 7,
+    airline: 'Airways B',
+    flightNumber: 'BB202',
+    departureTime: '10:30 AM',
+    arrivalTime: '02:30 PM',
+    price: 320,
+  },
+  {
+    id: 8,
+    airline: 'Airways B',
+    flightNumber: 'BB203',
+    departureTime: '01:30 PM',
+    arrivalTime: '05:30 PM',
+    price: 370,
+  },
+  {
+    id: 9,
+    airline: 'Airways B',
+    flightNumber: 'BB204',
+    departureTime: '04:30 PM',
+    arrivalTime: '08:30 PM',
+    price: 420,
+  },
+  {
+    id: 10,
+    airline: 'Airways B',
+    flightNumber: 'BB205',
+    departureTime: '07:30 PM',
+    arrivalTime: '11:30 PM',
+    price: 470,
+  },
+
+  // Airlines C
+  {
+    id: 11,
+    airline: 'Airways C',
+    flightNumber: 'CC301',
+    departureTime: '05:45 AM',
+    arrivalTime: '09:45 AM',
+    price: 260,
+  },
+  {
+    id: 12,
+    airline: 'Airways C',
+    flightNumber: 'CC302',
+    departureTime: '08:45 AM',
+    arrivalTime: '12:45 PM',
+    price: 310,
+  },
+  {
+    id: 13,
+    airline: 'Airways C',
+    flightNumber: 'CC303',
+    departureTime: '11:45 AM',
+    arrivalTime: '03:45 PM',
+    price: 360,
+  },
+  {
+    id: 14,
+    airline: 'Airways C',
+    flightNumber: 'CC304',
+    departureTime: '02:45 PM',
+    arrivalTime: '06:45 PM',
+    price: 410,
+  },
+  {
+    id: 15,
+    airline: 'Airways C',
+    flightNumber: 'CC305',
+    departureTime: '05:45 PM',
+    arrivalTime: '09:45 PM',
+    price: 460,
+  },
+
+  // Airlines D
+  {
+    id: 16,
+    airline: 'Airways D',
+    flightNumber: 'DD401',
+    departureTime: '06:15 AM',
+    arrivalTime: '10:15 AM',
+    price: 270,
+  },
+  {
+    id: 17,
+    airline: 'Airways D',
+    flightNumber: 'DD402',
+    departureTime: '09:15 AM',
+    arrivalTime: '01:15 PM',
+    price: 320,
+  },
+  {
+    id: 18,
+    airline: 'Airways D',
+    flightNumber: 'DD403',
+    departureTime: '12:15 PM',
+    arrivalTime: '04:15 PM',
+    price: 370,
+  },
+  {
+    id: 19,
+    airline: 'Airways D',
+    flightNumber: 'DD404',
+    departureTime: '03:15 PM',
+    arrivalTime: '07:15 PM',
+    price: 420,
+  },
+  {
+    id: 20,
+    airline: 'Airways D',
+    flightNumber: 'DD405',
+    departureTime: '06:15 PM',
+    arrivalTime: '10:15 PM',
+    price: 470,
+  },
+
+  // Additional Flights for Diversity
+  {
+    id: 21,
+    airline: 'Airways E',
+    flightNumber: 'EE501',
+    departureTime: '07:00 AM',
+    arrivalTime: '11:00 AM',
+    price: 230,
+  },
+  {
+    id: 22,
+    airline: 'Airways E',
+    flightNumber: 'EE502',
+    departureTime: '10:00 AM',
+    arrivalTime: '02:00 PM',
+    price: 290,
+  },
+  {
+    id: 23,
+    airline: 'Airways E',
+    flightNumber: 'EE503',
+    departureTime: '01:00 PM',
+    arrivalTime: '05:00 PM',
+    price: 340,
+  },
+  {
+    id: 24,
+    airline: 'Airways E',
+    flightNumber: 'EE504',
+    departureTime: '04:00 PM',
+    arrivalTime: '08:00 PM',
+    price: 390,
+  },
+  {
+    id: 25,
+    airline: 'Airways E',
+    flightNumber: 'EE505',
+    departureTime: '07:00 PM',
+    arrivalTime: '11:00 PM',
+    price: 440,
+  },
+]
 
 export default function Results() {
   const router = useRouter()
@@ -18,224 +233,120 @@ export default function Results() {
   const returnDate = searchParams.get('return') || 'N/A'
 
   // State for flights
-  const [flights, setFlights] = useState([])
+  const [flights, setFlights] = useState(myFlights)
 
   // Fetching (hardcoded) flight data
+  const [client, setClient] = useState(null)
+  const [currentStep, setCurrentStep] = useState(null)
+
+  // Refs for interactive elements
+  const sortOptionsRef = useRef(null)
+  const priceFilterRef = useRef(null)
+  const resetFiltersRef = useRef(null)
+  const departureTimeRef = useRef(null)
+  const arrivalTimeRef = useRef(null)
+  const selectButtonRef = useRef(null) // Reference to the first Select button
+
+  // Steps configuration
+  const steps = [
+    {
+      stepId: '87fddf5f-634f-4c0d-bc98-423232089c88',
+      ref: sortOptionsRef,
+      instruction:
+        'How would you like to sort the flight options? You can sort by Price, Departure Time, or Arrival Time.',
+    },
+    {
+      stepId: '604ac901-fc45-4069-82cd-ba0b8299a34a',
+      ref: priceFilterRef,
+      instruction:
+        'Would you like to set a budget for your flight? Please enter your minimum and maximum price range.',
+    },
+    {
+      stepId: 'eafaf40b-3611-4998-b235-a6c88b66836d',
+      ref: departureTimeRef,
+      instruction:
+        "Let's refine your search by departure time. Do you prefer Morning, Afternoon, or Evening flights?",
+    },
+    {
+      stepId: 'f765ccdd-ac33-4bb0-baa2-e82ae132c004',
+      ref: arrivalTimeRef,
+      instruction:
+        'Would you like to filter flights by arrival time? Please select your preferred arrival window: Morning, Afternoon, or Evening.',
+    },
+    {
+      stepId: 'd044eac1-f5a8-4496-909b-de42be4c6199',
+      ref: resetFiltersRef,
+      instruction:
+        'If you wish to clear all filters and view all available flights, click the "Reset Filters" button.',
+    },
+
+    {
+      stepId: '5f353bcc-eccb-4153-84c8-3673783a0b60',
+      ref: selectButtonRef,
+      instruction:
+        'Found a flight that suits your needs? Click the "Select" button to view more details about this flight.',
+    },
+  ]
+  const sentSteps = useRef(
+    steps.reduce((acc, step) => {
+      acc[step.stepId] = false
+      return acc
+    }, {}),
+  )
+
+  const [targetPosition, setTargetPosition] = useState(null)
+
+  // Initialize AI Client and set first step
   useEffect(() => {
-    const fetchedFlights = [
-      // Airlines A
-      {
-        id: 1,
-        airline: 'Airways A',
-        flightNumber: 'AA101',
-        departureTime: '06:00 AM',
-        arrivalTime: '10:00 AM',
-        price: 250,
-      },
-      {
-        id: 2,
-        airline: 'Airways A',
-        flightNumber: 'AA102',
-        departureTime: '09:00 AM',
-        arrivalTime: '01:00 PM',
-        price: 300,
-      },
-      {
-        id: 3,
-        airline: 'Airways A',
-        flightNumber: 'AA103',
-        departureTime: '12:00 PM',
-        arrivalTime: '04:00 PM',
-        price: 350,
-      },
-      {
-        id: 4,
-        airline: 'Airways A',
-        flightNumber: 'AA104',
-        departureTime: '03:00 PM',
-        arrivalTime: '07:00 PM',
-        price: 400,
-      },
-      {
-        id: 5,
-        airline: 'Airways A',
-        flightNumber: 'AA105',
-        departureTime: '06:00 PM',
-        arrivalTime: '10:00 PM',
-        price: 450,
-      },
+    const params = new URLSearchParams(window.location.search)
+    const cidParam = params.get('cid') || localStorage.getItem('cid')
+    console.log('cidParam', cidParam)
 
-      // Airlines B
-      {
-        id: 6,
-        airline: 'Airways B',
-        flightNumber: 'BB201',
-        departureTime: '07:30 AM',
-        arrivalTime: '11:30 AM',
-        price: 280,
-      },
-      {
-        id: 7,
-        airline: 'Airways B',
-        flightNumber: 'BB202',
-        departureTime: '10:30 AM',
-        arrivalTime: '02:30 PM',
-        price: 320,
-      },
-      {
-        id: 8,
-        airline: 'Airways B',
-        flightNumber: 'BB203',
-        departureTime: '01:30 PM',
-        arrivalTime: '05:30 PM',
-        price: 370,
-      },
-      {
-        id: 9,
-        airline: 'Airways B',
-        flightNumber: 'BB204',
-        departureTime: '04:30 PM',
-        arrivalTime: '08:30 PM',
-        price: 420,
-      },
-      {
-        id: 10,
-        airline: 'Airways B',
-        flightNumber: 'BB205',
-        departureTime: '07:30 PM',
-        arrivalTime: '11:30 PM',
-        price: 470,
-      },
-
-      // Airlines C
-      {
-        id: 11,
-        airline: 'Airways C',
-        flightNumber: 'CC301',
-        departureTime: '05:45 AM',
-        arrivalTime: '09:45 AM',
-        price: 260,
-      },
-      {
-        id: 12,
-        airline: 'Airways C',
-        flightNumber: 'CC302',
-        departureTime: '08:45 AM',
-        arrivalTime: '12:45 PM',
-        price: 310,
-      },
-      {
-        id: 13,
-        airline: 'Airways C',
-        flightNumber: 'CC303',
-        departureTime: '11:45 AM',
-        arrivalTime: '03:45 PM',
-        price: 360,
-      },
-      {
-        id: 14,
-        airline: 'Airways C',
-        flightNumber: 'CC304',
-        departureTime: '02:45 PM',
-        arrivalTime: '06:45 PM',
-        price: 410,
-      },
-      {
-        id: 15,
-        airline: 'Airways C',
-        flightNumber: 'CC305',
-        departureTime: '05:45 PM',
-        arrivalTime: '09:45 PM',
-        price: 460,
-      },
-
-      // Airlines D
-      {
-        id: 16,
-        airline: 'Airways D',
-        flightNumber: 'DD401',
-        departureTime: '06:15 AM',
-        arrivalTime: '10:15 AM',
-        price: 270,
-      },
-      {
-        id: 17,
-        airline: 'Airways D',
-        flightNumber: 'DD402',
-        departureTime: '09:15 AM',
-        arrivalTime: '01:15 PM',
-        price: 320,
-      },
-      {
-        id: 18,
-        airline: 'Airways D',
-        flightNumber: 'DD403',
-        departureTime: '12:15 PM',
-        arrivalTime: '04:15 PM',
-        price: 370,
-      },
-      {
-        id: 19,
-        airline: 'Airways D',
-        flightNumber: 'DD404',
-        departureTime: '03:15 PM',
-        arrivalTime: '07:15 PM',
-        price: 420,
-      },
-      {
-        id: 20,
-        airline: 'Airways D',
-        flightNumber: 'DD405',
-        departureTime: '06:15 PM',
-        arrivalTime: '10:15 PM',
-        price: 470,
-      },
-
-      // Additional Flights for Diversity
-      {
-        id: 21,
-        airline: 'Airways E',
-        flightNumber: 'EE501',
-        departureTime: '07:00 AM',
-        arrivalTime: '11:00 AM',
-        price: 230,
-      },
-      {
-        id: 22,
-        airline: 'Airways E',
-        flightNumber: 'EE502',
-        departureTime: '10:00 AM',
-        arrivalTime: '02:00 PM',
-        price: 290,
-      },
-      {
-        id: 23,
-        airline: 'Airways E',
-        flightNumber: 'EE503',
-        departureTime: '01:00 PM',
-        arrivalTime: '05:00 PM',
-        price: 340,
-      },
-      {
-        id: 24,
-        airline: 'Airways E',
-        flightNumber: 'EE504',
-        departureTime: '04:00 PM',
-        arrivalTime: '08:00 PM',
-        price: 390,
-      },
-      {
-        id: 25,
-        airline: 'Airways E',
-        flightNumber: 'EE505',
-        departureTime: '07:00 PM',
-        arrivalTime: '11:00 PM',
-        price: 440,
-      },
-    ]
-
-    setFlights(fetchedFlights)
+    if (cidParam) {
+      localStorage.setItem('cid', cidParam)
+      const clientInstance = multimodal.create({
+        apiKey: 'qS6KFGgY9Rt/uCcjLw',
+        workspaceId: '1648b2f6-14fd-4023-81cd-8a7b2efec4cd',
+        journeyId: '4a1e5904-7b18-401f-8e60-80a3df751063',
+        conversationId: cidParam,
+        languageCode: navigator.language,
+      })
+      setClient(clientInstance)
+      // Start the tour by setting currentStep to 0
+      setCurrentStep(0)
+    }
   }, [])
+
+  // Effect to send step when currentStep is set and ref is available
+  useEffect(() => {
+    if (currentStep !== null && client) {
+      const step = steps[currentStep]
+
+      if (step && step.ref.current && !sentSteps.current[step.stepId]) {
+        console.log(`Sending Step ID: ${step.stepId}`)
+        client.sendStep(step.stepId)
+        sentSteps.current[step.stepId] = true
+        // Scroll the highlighted element into view
+        step.ref.current.scrollIntoView({behavior: 'smooth', block: 'center'})
+      }
+    }
+  }, [currentStep, client, steps])
+
+  const handleNext = () => {
+    const nextStep = currentStep + 1
+    if (nextStep < steps.length) {
+      setCurrentStep(nextStep)
+    } else {
+      // All steps completed
+      setCurrentStep(null)
+      localStorage.setItem('hasSeenResultsTour', 'true') // Persist tour completion
+    }
+  }
+
+  const handleSkip = () => {
+    setCurrentStep(null)
+    localStorage.setItem('hasSeenResultsTour', 'true') // Persist tour completion
+  }
 
   // State for filters
   const [priceRange, setPriceRange] = useState({min: '', max: ''})
@@ -381,7 +492,7 @@ export default function Results() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-100 p-4 relative">
       <div className="max-w-7xl mx-auto">
         {/* Search Criteria */}
         <div className="bg-white p-6 rounded-lg shadow mb-6">
@@ -405,27 +516,40 @@ export default function Results() {
           <aside className="w-full md:w-1/4 bg-white p-6 rounded-lg shadow mr-4 mb-6 md:mb-0">
             <h3 className="text-xl font-semibold mb-4">Filters</h3>
 
+            {/* Sort Options */}
+            <div ref={sortOptionsRef}>
+              <SortOptions
+                sortOption={sortOption}
+                setSortOption={setSortOption}
+              />
+            </div>
+
             {/* Price Range Filter */}
             <PriceFilter
               priceRange={priceRange}
               setPriceRange={setPriceRange}
+              ref={priceFilterRef}
             />
 
             {/* Departure Time Filter */}
             <DepartureTimeFilter
               departureTime={departureTime}
               setDepartureTime={setDepartureTime}
+              ref={departureTimeRef}
             />
 
             {/* Arrival Time Filter */}
             <ArrivalTimeFilter
               arrivalTime={arrivalTime}
               setArrivalTime={setArrivalTime}
+              ref={arrivalTimeRef}
             />
 
             {/* Reset Filters Button */}
             <button
+              ref={resetFiltersRef}
               onClick={() => {
+                setSortOption('')
                 setPriceRange({min: '', max: ''})
                 setDepartureTime({
                   morning: false,
@@ -437,7 +561,6 @@ export default function Results() {
                   afternoon: false,
                   evening: false,
                 })
-                setSortOption('')
               }}
               className="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-colors mt-4"
             >
@@ -448,10 +571,7 @@ export default function Results() {
           {/* Flight Listings */}
           <main className="w-full md:w-3/4">
             {/* Sorting Options */}
-            <SortOptions
-              sortOption={sortOption}
-              setSortOption={setSortOption}
-            />
+            {/* Already integrated within Filters Sidebar */}
 
             {/* Display No Flights Found */}
             {filteredFlights.length === 0 ? (
@@ -460,7 +580,7 @@ export default function Results() {
               </p>
             ) : (
               <div className="space-y-4">
-                {filteredFlights.map((flight) => (
+                {filteredFlights.map((flight, index) => (
                   <div
                     key={flight.id}
                     className="bg-white p-6 rounded-lg shadow"
@@ -492,7 +612,10 @@ export default function Results() {
                           {flight.arrivalTime}
                         </p>
                       </div>
-                      <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                      <button
+                        ref={index === 0 ? selectButtonRef : null} // Assign ref only to the first Select button
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                      >
                         <Link href={`/results/flight/${flight.id}`}>
                           Select
                         </Link>
@@ -505,6 +628,29 @@ export default function Results() {
           </main>
         </div>
       </div>
+
+      {/* Highlight Overlay and Side Window */}
+      {currentStep !== null &&
+        currentStep < steps.length &&
+        steps[currentStep].ref.current && (
+          <>
+            <HighlightOverlay
+              targetRef={steps[currentStep].ref}
+              setTargetPosition={setTargetPosition}
+              step={currentStep}
+            />
+            {targetPosition && (
+              <SideWindow
+                onNext={handleNext}
+                onSkip={handleSkip}
+                instruction={steps[currentStep].instruction}
+                position={targetPosition}
+                step={currentStep}
+                totalSteps={steps.length}
+              />
+            )}
+          </>
+        )}
     </div>
   )
 }

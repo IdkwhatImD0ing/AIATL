@@ -2,8 +2,11 @@
 'use client'
 
 import {useRouter, useParams} from 'next/navigation'
-import {useEffect, useState} from 'react'
+import {useEffect, useState, useRef} from 'react'
 import PurchaseForm from '../../../../components/PurchaseForm'
+import HighlightOverlay from '../../../../components/HighlightOverlay'
+import SideWindow from '../../../../components/SideWindow'
+import * as multimodal from '@nlxai/multimodal'
 
 export default function FlightDetails() {
   const router = useRouter()
@@ -11,6 +14,47 @@ export default function FlightDetails() {
   const flightId = params.flightId
 
   const [flight, setFlight] = useState(null)
+
+  // Refs for interactive elements in PurchaseForm
+  const fullNameRef = useRef(null)
+  const emailRef = useRef(null)
+  const cardNumberRef = useRef(null)
+  const expiryDateRef = useRef(null)
+  const cvvRef = useRef(null)
+  const confirmButtonRef = useRef(null)
+
+  // Steps configuration
+  const steps = [
+    {
+      stepId: '0b59842d-d87a-42e1-a3e6-320f605a55a1',
+      ref: fullNameRef,
+      instruction:
+        'Please enter your personal information, including your full name and email address.',
+    },
+    {
+      stepId: 'f797660e-4ce2-4c93-af74-693df835b878',
+      ref: cardNumberRef,
+      instruction:
+        'Now, please enter your credit card information, including card number, expiry date, and CVV.',
+    },
+    {
+      stepId: '932d91ec-2b08-451c-8a3f-2928e32817ac',
+      ref: confirmButtonRef,
+      instruction:
+        'Helps you finalize your booking by confirming the purchase after entering all necessary information.',
+    },
+  ]
+
+  const sentSteps = useRef(
+    steps.reduce((acc, step) => {
+      acc[step.stepId] = false
+      return acc
+    }, {}),
+  )
+
+  const [currentStep, setCurrentStep] = useState(null)
+  const [targetPosition, setTargetPosition] = useState(null)
+  const [client, setClient] = useState(null)
 
   // Simulated fetch function to get flight details by ID
   useEffect(() => {
@@ -283,6 +327,79 @@ export default function FlightDetails() {
     setFlight(selectedFlight)
   }, [flightId])
 
+  // Initialize AI Client and set first step after flight is loaded
+  useEffect(() => {
+    if (!flight) return
+
+    const params = new URLSearchParams(window.location.search)
+    const cidParam = params.get('cid') || localStorage.getItem('cid')
+
+    if (cidParam) {
+      localStorage.setItem('cid', cidParam)
+      const clientInstance = multimodal.create({
+        apiKey: 'qS6KFGgY9Rt/uCcjLw',
+        workspaceId: '1648b2f6-14fd-4023-81cd-8a7b2efec4cd',
+        journeyId: '4a1e5904-7b18-401f-8e60-80a3df751063',
+        conversationId: cidParam,
+        languageCode: navigator.language,
+      })
+      setClient(clientInstance)
+      console.log('AI Client initialized. Starting tour.')
+
+      // Start the tour by setting currentStep to 0 after refs are attached
+      // Use setTimeout to allow refs to be attached
+      setTimeout(() => {
+        if (fullNameRef.current) {
+          setCurrentStep(0)
+          console.log('Starting step 0')
+        } else {
+          console.warn('fullNameRef is not attached yet.')
+        }
+      }, 100) // Adjust the delay as necessary
+    } else {
+      console.log('No cid parameter found. Tour will not start.')
+    }
+  }, [flight])
+
+  // Effect to send step when currentStep is set and ref is available
+  useEffect(() => {
+    if (currentStep !== null && client) {
+      const step = steps[currentStep]
+      if (step && step.ref.current && !sentSteps.current[step.stepId]) {
+        console.log(`Sending Step ID: ${step.stepId}`)
+        client.sendStep(step.stepId)
+        sentSteps.current[step.stepId] = true
+        // Scroll the highlighted element into view
+        step.ref.current.scrollIntoView({behavior: 'smooth', block: 'center'})
+      }
+    }
+  }, [currentStep, client, steps])
+
+  const handleNext = () => {
+    const nextStep = currentStep + 1
+    if (nextStep < steps.length) {
+      setCurrentStep(nextStep)
+    } else {
+      // All steps completed
+      setCurrentStep(null)
+      localStorage.setItem('hasSeenFlightTour', 'true') // Persist tour completion
+      console.log('Flight tour completed.')
+    }
+  }
+
+  const handleSkip = () => {
+    setCurrentStep(null)
+    localStorage.setItem('hasSeenFlightTour', 'true') // Persist tour completion
+    console.log('Flight tour skipped.')
+  }
+
+  const handlePurchaseSubmit = (e) => {
+    e.preventDefault()
+    // Implement purchase logic here
+    alert('Purchase Confirmed!')
+    router.push('/results')
+  }
+
   if (!flight) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -292,7 +409,7 @@ export default function FlightDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-100 p-4 relative">
       <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow">
         {/* Flight Details */}
         <h2 className="text-2xl font-semibold mb-4">Flight Details</h2>
@@ -324,11 +441,43 @@ export default function FlightDetails() {
           </p>
         </div>
 
-        {/* Purchase Button */}
+        {/* Purchase Form */}
         <div className="mt-6">
-          <PurchaseForm />
+          <h3 className="text-xl font-semibold mb-4">Purchase Flight</h3>
+          <PurchaseForm
+            onSubmit={handlePurchaseSubmit}
+            fullNameRef={fullNameRef}
+            emailRef={emailRef}
+            cardNumberRef={cardNumberRef}
+            expiryDateRef={expiryDateRef}
+            cvvRef={cvvRef}
+            confirmButtonRef={confirmButtonRef}
+          />
         </div>
       </div>
+
+      {/* Highlight Overlay and Side Window */}
+      {currentStep !== null &&
+        currentStep < steps.length &&
+        steps[currentStep].ref.current && (
+          <>
+            <HighlightOverlay
+              targetRef={steps[currentStep].ref}
+              setTargetPosition={setTargetPosition}
+              step={currentStep}
+            />
+            {targetPosition && (
+              <SideWindow
+                onNext={handleNext}
+                onSkip={handleSkip}
+                instruction={steps[currentStep].instruction}
+                position={targetPosition}
+                step={currentStep}
+                totalSteps={steps.length}
+              />
+            )}
+          </>
+        )}
     </div>
   )
 }

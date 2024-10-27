@@ -1,0 +1,199 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Sample NLX Codehook for use with Twilio.
+
+Parameters:
+  EnhancedSpeech:
+    Description: True for enabling twilio enhanced speech. https://www.twilio.com/docs/voice/twiml/gather#enhanced
+    Default: true
+    Type: String
+    AllowedValues: [true, false]
+
+  ExternalId:
+    Description: External ID associated with the NLX role
+    Type: String
+
+  S3Bucket:
+    Description: S3 bucket where the Lambda hook code is hosted
+    Type: String
+    Default: templates.nlx.ai
+
+  S3Prefix:
+    Description: S3 bucket prefix where the Lambda code hook is hosted
+    Type: String
+    Default: code/twilio-voice-hook-f59f3cea-5d2a-4d9a-9367-9fd041f7f2df.zip
+
+Conditions:
+  IsUsEast1: !Equals [!Ref 'AWS::Region', 'us-east-1']
+
+Resources:
+  # IAM
+  ApiGatewayRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: lambda-permissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-codehook'
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: log-write-permissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:DescribeLogGroups'
+                  - 'logs:DescribeLogStreams'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-codehook'
+
+  # LAMBDA
+
+  WebhookFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-codehook
+      Environment:
+        Variables:
+          stackName: !Ref AWS::StackName
+          enhancedSpeech: !Sub ${EnhancedSpeech}
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref S3Prefix
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs16.x
+      Timeout: 10
+      MemorySize: 128
+      Handler: index.handler
+
+  # API GATEWAY
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref ApiGateway
+      Description: !Sub '${AWS::StackName} deployment'
+      StageName: 'twilio'
+    DependsOn: ApiGateway
+
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Body: !Sub |
+        ---
+        swagger: "2.0"
+        info:
+          version: "1.0.0"
+          title: "Twilio Codehook - ${AWS::StackName}"
+        schemes:
+        - "https"
+        paths:
+          /{proxy+}:
+            post:
+              summary: codehook request
+              description: ''
+              operationId: codehookRequest
+              consumes:
+                - application/json
+              produces:
+                - application/json
+              parameters:
+                - in: body
+                  name: item
+                  description: the codehook request body
+                  required: true
+                  schema:
+                    $ref: '#/definitions/CodehookRequest'
+              responses:
+                '200':
+                  description: the codehook response
+                  schema:
+                    $ref: '#/definitions/CodehookResponse'
+                '400':
+                  description: Bad request
+                  schema:
+                    $ref: '#/definitions/Error'
+                '500':
+                  description: Internal error
+                  schema:
+                    $ref: '#/definitions/Error'
+              x-amazon-apigateway-integration:
+                credentials: "${LambdaExecutionRole.Arn}"
+                uri: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-codehook/invocations"
+                httpMethod: "POST"
+                type: "aws_proxy"
+
+        definitions:
+          CodehookRequest:
+            type: object
+            properties:
+              request:
+                type: object
+
+          CodehookResponse:
+            type: object
+            properties:
+              response:
+                type: object
+
+          Error:
+            type: object
+            properties:
+              statusCode:
+                type: string
+              errorType:
+                type: string
+              errorMessage:
+                type: string
+
+    DependsOn: ApiGatewayRole
+
+Outputs:
+  FulfillmentLambdaEndpoint:
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/twilio'
