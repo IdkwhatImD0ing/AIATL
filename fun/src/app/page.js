@@ -11,37 +11,37 @@ import {motion} from 'framer-motion' // Import Framer Motion
 export default function Home() {
   const router = useRouter()
   const [formData, setFormData] = useState({
-    location: '',
-    departure: '',
-    return: '',
+    departureAirport: '',
+    arrivalAirport: '',
+    date: '',
   })
   const [client, setClient] = useState(null)
 
   // Refs for interactive elements
-  const locationRef = useRef(null)
-  const departureRef = useRef(null)
-  const returnRef = useRef(null)
+  const departureAirportRef = useRef(null)
+  const arrivalAirportRef = useRef(null)
+  const dateRef = useRef(null)
   const searchButtonRef = useRef(null)
 
-  // Steps configuration
+  // Updated Steps configuration with original stepIds
   const steps = [
     {
-      stepId: 'f1d44c87-64db-4483-b54c-e11579d1d1e7', // Location Selection
-      ref: locationRef,
+      stepId: 'f1d44c87-64db-4483-b54c-e11579d1d1e7', // Original Location Selection
+      ref: departureAirportRef,
       instruction:
-        'Please enter your desired travel location in the field highlighted.',
+        'Please enter your departure airport using the 3-letter IATA code (e.g., LAX).',
     },
     {
-      stepId: '877da91d-b9cb-4367-a7ed-439ff0d233e3', // Departure Date Selection
-      ref: departureRef,
+      stepId: '877da91d-b9cb-4367-a7ed-439ff0d233e3', // Original Departure Date Selection
+      ref: arrivalAirportRef,
       instruction:
-        'Now, select your preferred departure date from the calendar.',
+        'Now, enter your arrival airport using the 3-letter IATA code (e.g., JFK).',
     },
     {
-      stepId: '35b82e56-2470-4041-a90b-1504ca835a1a', // Return Date Selection
-      ref: returnRef,
+      stepId: '35b82e56-2470-4041-a90b-1504ca835a1a', // Original Return Date Selection
+      ref: dateRef,
       instruction:
-        "Finally, choose your return date. If it's a one-way trip, you can skip this step.",
+        'Finally, select your preferred departure date from the calendar.',
     },
     {
       stepId: 'e481d892-64f5-4813-8034-90d02d10a514', // Search Flights Button
@@ -96,10 +96,18 @@ export default function Home() {
 
   const handleChange = (e) => {
     const {name, value} = e.target
-    setFormData({
-      ...formData,
-      [name]: value,
-    })
+    // For airport fields, ensure uppercase and max 3 characters
+    if (name === 'departureAirport' || name === 'arrivalAirport') {
+      setFormData({
+        ...formData,
+        [name]: value.toUpperCase().slice(0, 3),
+      })
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      })
+    }
   }
 
   const handleNext = () => {
@@ -120,11 +128,11 @@ export default function Home() {
     e.preventDefault()
     // Navigate to the results page with query parameters as a single string URL
     router.push(
-      `/results?location=${encodeURIComponent(
-        formData.location,
-      )}&departure=${encodeURIComponent(
-        formData.departure,
-      )}&return=${encodeURIComponent(formData.return)}`,
+      `/results?departureAirport=${encodeURIComponent(
+        formData.departureAirport,
+      )}&arrivalAirport=${encodeURIComponent(
+        formData.arrivalAirport,
+      )}&date=${encodeURIComponent(formData.date)}`,
     )
     // Trigger sendStep for search button
     if (client && currentStep === 3) {
@@ -182,58 +190,71 @@ export default function Home() {
         className="bg-gray-800 rounded-lg shadow-2xl p-8 w-full max-w-md z-10"
       >
         <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* Location Input */}
+          {/* Departure Airport Input */}
           <div>
-            <label htmlFor="location" className="block text-gray-400 mb-2">
-              From
+            <label
+              htmlFor="departureAirport"
+              className="block text-gray-400 mb-2"
+            >
+              Departure Airport (IATA)
             </label>
             <input
               type="text"
-              id="location"
-              name="location"
-              placeholder="Enter departure location"
-              value={formData.location}
+              id="departureAirport"
+              name="departureAirport"
+              placeholder="e.g., LAX"
+              value={formData.departureAirport}
               onChange={handleChange}
-              ref={locationRef}
+              ref={departureAirportRef}
               className="w-full px-4 py-3 border border-gray-700 rounded-md shadow-sm bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               required
+              pattern="[A-Z]{3}" // Ensures exactly 3 uppercase letters
+              title="Please enter a valid 3-letter IATA code."
             />
           </div>
 
-          {/* Departure Date */}
+          {/* Arrival Airport Input */}
           <div>
-            <label htmlFor="departure" className="block text-gray-400 mb-2">
+            <label
+              htmlFor="arrivalAirport"
+              className="block text-gray-400 mb-2"
+            >
+              Arrival Airport (IATA)
+            </label>
+            <input
+              type="text"
+              id="arrivalAirport"
+              name="arrivalAirport"
+              placeholder="e.g., JFK"
+              value={formData.arrivalAirport}
+              onChange={handleChange}
+              ref={arrivalAirportRef}
+              className="w-full px-4 py-3 border border-gray-700 rounded-md shadow-sm bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              required
+              pattern="[A-Z]{3}" // Ensures exactly 3 uppercase letters
+              title="Please enter a valid 3-letter IATA code."
+            />
+          </div>
+
+          {/* Date Input */}
+          <div>
+            <label htmlFor="date" className="block text-gray-400 mb-2">
               Departure Date
             </label>
             <input
               type="date"
-              id="departure"
-              name="departure"
-              value={formData.departure}
+              id="date"
+              name="date"
+              value={formData.date}
               onChange={handleChange}
-              ref={departureRef}
+              ref={dateRef}
               className="w-full px-4 py-3 border border-gray-700 rounded-md shadow-sm bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               required
+              min={new Date().toISOString().split('T')[0]} // Prevent selecting past dates
             />
           </div>
 
-          {/* Return Date */}
-          <div>
-            <label htmlFor="return" className="block text-gray-400 mb-2">
-              Return Date
-            </label>
-            <input
-              type="date"
-              id="return"
-              name="return"
-              value={formData.return}
-              onChange={handleChange}
-              ref={returnRef}
-              className="w-full px-4 py-3 border border-gray-700 rounded-md shadow-sm bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-            />
-          </div>
-
-          {/* Search Button */}
+          {/* Search Flights Button */}
           <div>
             <motion.button
               whileHover={{scale: 1.05}}

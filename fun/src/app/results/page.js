@@ -12,228 +12,18 @@ import HighlightOverlay from '../../components/HighlightOverlay'
 import SideWindow from '../../components/SideWindow'
 import * as multimodal from '@nlxai/multimodal'
 
-const myFlights = [
-  // Airlines A
-  {
-    id: 1,
-    airline: 'Airways A',
-    flightNumber: 'AA101',
-    departureTime: '06:00 AM',
-    arrivalTime: '10:00 AM',
-    price: 250,
-  },
-  {
-    id: 2,
-    airline: 'Airways A',
-    flightNumber: 'AA102',
-    departureTime: '09:00 AM',
-    arrivalTime: '01:00 PM',
-    price: 300,
-  },
-  {
-    id: 3,
-    airline: 'Airways A',
-    flightNumber: 'AA103',
-    departureTime: '12:00 PM',
-    arrivalTime: '04:00 PM',
-    price: 350,
-  },
-  {
-    id: 4,
-    airline: 'Airways A',
-    flightNumber: 'AA104',
-    departureTime: '03:00 PM',
-    arrivalTime: '07:00 PM',
-    price: 400,
-  },
-  {
-    id: 5,
-    airline: 'Airways A',
-    flightNumber: 'AA105',
-    departureTime: '06:00 PM',
-    arrivalTime: '10:00 PM',
-    price: 450,
-  },
-
-  // Airlines B
-  {
-    id: 6,
-    airline: 'Airways B',
-    flightNumber: 'BB201',
-    departureTime: '07:30 AM',
-    arrivalTime: '11:30 AM',
-    price: 280,
-  },
-  {
-    id: 7,
-    airline: 'Airways B',
-    flightNumber: 'BB202',
-    departureTime: '10:30 AM',
-    arrivalTime: '02:30 PM',
-    price: 320,
-  },
-  {
-    id: 8,
-    airline: 'Airways B',
-    flightNumber: 'BB203',
-    departureTime: '01:30 PM',
-    arrivalTime: '05:30 PM',
-    price: 370,
-  },
-  {
-    id: 9,
-    airline: 'Airways B',
-    flightNumber: 'BB204',
-    departureTime: '04:30 PM',
-    arrivalTime: '08:30 PM',
-    price: 420,
-  },
-  {
-    id: 10,
-    airline: 'Airways B',
-    flightNumber: 'BB205',
-    departureTime: '07:30 PM',
-    arrivalTime: '11:30 PM',
-    price: 470,
-  },
-
-  // Airlines C
-  {
-    id: 11,
-    airline: 'Airways C',
-    flightNumber: 'CC301',
-    departureTime: '05:45 AM',
-    arrivalTime: '09:45 AM',
-    price: 260,
-  },
-  {
-    id: 12,
-    airline: 'Airways C',
-    flightNumber: 'CC302',
-    departureTime: '08:45 AM',
-    arrivalTime: '12:45 PM',
-    price: 310,
-  },
-  {
-    id: 13,
-    airline: 'Airways C',
-    flightNumber: 'CC303',
-    departureTime: '11:45 AM',
-    arrivalTime: '03:45 PM',
-    price: 360,
-  },
-  {
-    id: 14,
-    airline: 'Airways C',
-    flightNumber: 'CC304',
-    departureTime: '02:45 PM',
-    arrivalTime: '06:45 PM',
-    price: 410,
-  },
-  {
-    id: 15,
-    airline: 'Airways C',
-    flightNumber: 'CC305',
-    departureTime: '05:45 PM',
-    arrivalTime: '09:45 PM',
-    price: 460,
-  },
-
-  // Airlines D
-  {
-    id: 16,
-    airline: 'Airways D',
-    flightNumber: 'DD401',
-    departureTime: '06:15 AM',
-    arrivalTime: '10:15 AM',
-    price: 270,
-  },
-  {
-    id: 17,
-    airline: 'Airways D',
-    flightNumber: 'DD402',
-    departureTime: '09:15 AM',
-    arrivalTime: '01:15 PM',
-    price: 320,
-  },
-  {
-    id: 18,
-    airline: 'Airways D',
-    flightNumber: 'DD403',
-    departureTime: '12:15 PM',
-    arrivalTime: '04:15 PM',
-    price: 370,
-  },
-  {
-    id: 19,
-    airline: 'Airways D',
-    flightNumber: 'DD404',
-    departureTime: '03:15 PM',
-    arrivalTime: '07:15 PM',
-    price: 420,
-  },
-  {
-    id: 20,
-    airline: 'Airways D',
-    flightNumber: 'DD405',
-    departureTime: '06:15 PM',
-    arrivalTime: '10:15 PM',
-    price: 470,
-  },
-
-  // Additional Flights for Diversity
-  {
-    id: 21,
-    airline: 'Airways E',
-    flightNumber: 'EE501',
-    departureTime: '07:00 AM',
-    arrivalTime: '11:00 AM',
-    price: 230,
-  },
-  {
-    id: 22,
-    airline: 'Airways E',
-    flightNumber: 'EE502',
-    departureTime: '10:00 AM',
-    arrivalTime: '02:00 PM',
-    price: 290,
-  },
-  {
-    id: 23,
-    airline: 'Airways E',
-    flightNumber: 'EE503',
-    departureTime: '01:00 PM',
-    arrivalTime: '05:00 PM',
-    price: 340,
-  },
-  {
-    id: 24,
-    airline: 'Airways E',
-    flightNumber: 'EE504',
-    departureTime: '04:00 PM',
-    arrivalTime: '08:00 PM',
-    price: 390,
-  },
-  {
-    id: 25,
-    airline: 'Airways E',
-    flightNumber: 'EE505',
-    departureTime: '07:00 PM',
-    arrivalTime: '11:00 PM',
-    price: 440,
-  },
-]
-
 export default function Results() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const location = searchParams.get('location') || 'Any'
-  const departure = searchParams.get('departure') || 'N/A'
-  const returnDate = searchParams.get('return') || 'N/A'
+  const departureAirport = searchParams.get('departureAirport') || 'Any'
+  const arrivalAirport = searchParams.get('arrivalAirport') || 'N/A'
+  const date = searchParams.get('date') || 'N/A'
 
   // State for flights
-  const [flights, setFlights] = useState(myFlights)
+  const [flights, setFlights] = useState([]) // Initialize as empty array
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   // Fetching (hardcoded) flight data
   const [client, setClient] = useState(null)
@@ -365,13 +155,95 @@ export default function Results() {
   const [sortOption, setSortOption] = useState('')
 
   // Function to convert time string to minutes for comparison
-  const timeToMinutes = (timeStr) => {
-    const [time, modifier] = timeStr.split(' ')
-    let [hours, minutes] = time.split(':').map(Number)
-    if (modifier === 'PM' && hours !== 12) hours += 12
-    if (modifier === 'AM' && hours === 12) hours = 0
+  // Helper function to convert time string to minutes since midnight
+  // Helper function to convert "YYYY-MM-DD HH:MM" to minutes since midnight
+  const timeToMinutes = (dateTimeStr) => {
+    if (!dateTimeStr) return 0 // Handle missing time
+
+    // Extract the time part
+    const timePart = dateTimeStr.split(' ')[1] // "HH:MM"
+
+    if (!timePart) return 0 // Handle unexpected format
+
+    const [hours, minutes] = timePart.split(':').map(Number)
+
     return hours * 60 + minutes
   }
+
+  // Fetch flight data from API
+  useEffect(() => {
+    const fetchFlights = async () => {
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        // Extract departure and arrival airport codes from location if possible
+        // For simplicity, let's assume 'location' refers to arrival airport
+
+        const response = await fetch(
+          `/api/flights?departure_id=${departureAirport}&arrival_id=${arrivalAirport}&outbound_date=${date}&currency=USD&hl=en`,
+        )
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch flight data.')
+        }
+
+        const data = await response.json()
+
+        // Map the SerpAPI response to your flight structure
+        const mappedFlights = []
+
+        const processFlight = (flight) => {
+          const departureTime = flight.flights[0].departure_airport.time
+          const arrivalTime = flight.flights[0].arrival_airport.time
+          const price = flight.price
+          const airline = flight.flights[0].airline
+          const flightNumber = flight.flights[0].flight_number
+          const travelClass = flight.flights[0].travel_class
+          const legroom = flight.flights[0].legroom
+          const duration = flight.total_duration
+          const airplane = flight.flights[0].airplane
+          const airline_logo = flight.flights[0].airline_logo
+          const departureAirport = flight.flights[0].departure_airport.name
+          const arrivalAirport = flight.flights[0].arrival_airport.name
+          console.log(flight)
+          mappedFlights.push({
+            airline: airline,
+            flightNumber: flightNumber,
+            departureTime: departureTime,
+            arrivalTime: arrivalTime,
+            price: price,
+            travelClass: travelClass,
+            legroom: legroom,
+            duration: duration,
+            airplane: airplane,
+            airline_logo: airline_logo,
+            departureAirport: departureAirport,
+            arrivalAirport: arrivalAirport,
+          })
+        }
+
+        console.log('data', mappedFlights)
+
+        if (data.best_flights) {
+          data.best_flights.forEach(processFlight)
+        }
+
+        if (data.other_flights) {
+          data.other_flights.forEach(processFlight)
+        }
+
+        setFlights(mappedFlights)
+      } catch (err) {
+        console.error(err)
+        setError(err.message || 'An unexpected error occurred.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchFlights()
+  }, [arrivalAirport, departureAirport, date])
 
   // Memoized filtered and sorted flights
   const filteredFlights = useMemo(() => {
@@ -498,15 +370,14 @@ export default function Results() {
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-6">
           <h2 className="text-3xl font-semibold mb-4">Flight Results</h2>
           <p className="text-gray-300">
-            <span className="font-medium">Destination:</span> {location}
+            <span className="font-medium">Origin:</span> {departureAirport}
+          </p>
+          <p className="text-gray-300">
+            <span className="font-medium">Destination:</span> {arrivalAirport}
           </p>
           <p className="text-gray-300">
             <span className="font-medium">Departure Date:</span>{' '}
-            {formatDate(departure)}
-          </p>
-          <p className="text-gray-300">
-            <span className="font-medium">Return Date:</span>{' '}
-            {formatDate(returnDate)}
+            {formatDate(date)}
           </p>
         </div>
 
@@ -525,25 +396,28 @@ export default function Results() {
             </div>
 
             {/* Price Range Filter */}
-            <PriceFilter
-              priceRange={priceRange}
-              setPriceRange={setPriceRange}
-              ref={priceFilterRef}
-            />
+            <div ref={priceFilterRef}>
+              <PriceFilter
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+              />
+            </div>
 
             {/* Departure Time Filter */}
-            <DepartureTimeFilter
-              departureTime={departureTime}
-              setDepartureTime={setDepartureTime}
-              ref={departureTimeRef}
-            />
+            <div ref={departureTimeRef}>
+              <DepartureTimeFilter
+                departureTime={departureTime}
+                setDepartureTime={setDepartureTime}
+              />
+            </div>
 
             {/* Arrival Time Filter */}
-            <ArrivalTimeFilter
-              arrivalTime={arrivalTime}
-              setArrivalTime={setArrivalTime}
-              ref={arrivalTimeRef}
-            />
+            <div ref={arrivalTimeRef}>
+              <ArrivalTimeFilter
+                arrivalTime={arrivalTime}
+                setArrivalTime={setArrivalTime}
+              />
+            </div>
 
             {/* Reset Filters Button */}
             <button
@@ -570,7 +444,13 @@ export default function Results() {
 
           {/* Flight Listings */}
           <main className="w-full md:w-3/4">
-            {filteredFlights.length === 0 ? (
+            {isLoading ? (
+              <p className="text-center text-gray-300 mt-8">
+                Loading flights...
+              </p>
+            ) : error ? (
+              <p className="text-center text-red-500 mt-8">{error}</p>
+            ) : filteredFlights.length === 0 ? (
               <p className="text-center text-gray-300 mt-8">
                 No flights match your criteria.
               </p>
@@ -578,24 +458,31 @@ export default function Results() {
               <div className="space-y-4">
                 {filteredFlights.map((flight, index) => (
                   <div
-                    key={flight.id}
+                    key={index}
                     className="bg-gray-800 p-6 rounded-lg shadow-md flex justify-between items-center"
                   >
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">
-                        {flight.airline}
-                      </h3>
-                      <p className="text-gray-400">
-                        Flight: {flight.flightNumber}
-                      </p>
-                      <p className="text-gray-300 mt-2">
-                        <span className="font-medium">Departure:</span>{' '}
-                        {flight.departureTime}
-                      </p>
-                      <p className="text-gray-300">
-                        <span className="font-medium">Arrival:</span>{' '}
-                        {flight.arrivalTime}
-                      </p>
+                    <div className="flex items-center">
+                      <img
+                        src={flight.airline_logo}
+                        alt={`${flight.airline} logo`}
+                        className="w-12 h-12 mr-4"
+                      />
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">
+                          {flight.airline}
+                        </h3>
+                        <p className="text-gray-400">
+                          Flight: {flight.flightNumber}
+                        </p>
+                        <p className="text-gray-300 mt-2">
+                          <span className="font-medium">Departure:</span>{' '}
+                          {flight.departureTime}
+                        </p>
+                        <p className="text-gray-300">
+                          <span className="font-medium">Arrival:</span>{' '}
+                          {flight.arrivalTime}
+                        </p>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="text-gray-300 text-lg font-semibold">
@@ -604,10 +491,16 @@ export default function Results() {
                       <button
                         ref={index === 0 ? selectButtonRef : null}
                         className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+                        onClick={() => {
+                          sessionStorage.setItem(
+                            'selectedFlight',
+                            JSON.stringify(flight),
+                          )
+                          console.log('selectedFlight', flight)
+                          router.push('/results/flight')
+                        }}
                       >
-                        <Link href={`/results/flight/${flight.id}`}>
-                          Select
-                        </Link>
+                        Select
                       </button>
                     </div>
                   </div>
