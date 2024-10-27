@@ -492,28 +492,28 @@ export default function Results() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 relative">
+    <div className="min-h-screen bg-gray-900 text-white p-4 relative">
       <div className="max-w-7xl mx-auto">
         {/* Search Criteria */}
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
-          <h2 className="text-2xl font-semibold mb-4">Flight Results</h2>
-          <p className="text-gray-700">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-6">
+          <h2 className="text-3xl font-semibold mb-4">Flight Results</h2>
+          <p className="text-gray-300">
             <span className="font-medium">Destination:</span> {location}
           </p>
-          <p className="text-gray-700">
+          <p className="text-gray-300">
             <span className="font-medium">Departure Date:</span>{' '}
             {formatDate(departure)}
           </p>
-          <p className="text-gray-700">
+          <p className="text-gray-300">
             <span className="font-medium">Return Date:</span>{' '}
             {formatDate(returnDate)}
           </p>
         </div>
 
         {/* Filters and Flight Listings */}
-        <div className="flex flex-col md:flex-row">
+        <div className="flex flex-col md:flex-row gap-4">
           {/* Filter Sidebar */}
-          <aside className="w-full md:w-1/4 bg-white p-6 rounded-lg shadow mr-4 mb-6 md:mb-0">
+          <aside className="w-full md:w-1/4 bg-gray-800 p-6 rounded-lg shadow-md">
             <h3 className="text-xl font-semibold mb-4">Filters</h3>
 
             {/* Sort Options */}
@@ -570,12 +570,8 @@ export default function Results() {
 
           {/* Flight Listings */}
           <main className="w-full md:w-3/4">
-            {/* Sorting Options */}
-            {/* Already integrated within Filters Sidebar */}
-
-            {/* Display No Flights Found */}
             {filteredFlights.length === 0 ? (
-              <p className="text-center text-gray-700 mt-8">
+              <p className="text-center text-gray-300 mt-8">
                 No flights match your criteria.
               </p>
             ) : (
@@ -583,38 +579,31 @@ export default function Results() {
                 {filteredFlights.map((flight, index) => (
                   <div
                     key={flight.id}
-                    className="bg-white p-6 rounded-lg shadow"
+                    className="bg-gray-800 p-6 rounded-lg shadow-md flex justify-between items-center"
                   >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-semibold">
-                          {flight.airline}
-                        </h3>
-                        <p className="text-gray-600">
-                          Flight: {flight.flightNumber}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-gray-700">
-                          <span className="font-medium">Price:</span> $
-                          {flight.price}
-                        </p>
-                      </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">
+                        {flight.airline}
+                      </h3>
+                      <p className="text-gray-400">
+                        Flight: {flight.flightNumber}
+                      </p>
+                      <p className="text-gray-300 mt-2">
+                        <span className="font-medium">Departure:</span>{' '}
+                        {flight.departureTime}
+                      </p>
+                      <p className="text-gray-300">
+                        <span className="font-medium">Arrival:</span>{' '}
+                        {flight.arrivalTime}
+                      </p>
                     </div>
-                    <div className="mt-4 flex justify-between">
-                      <div>
-                        <p className="text-gray-700">
-                          <span className="font-medium">Departure:</span>{' '}
-                          {flight.departureTime}
-                        </p>
-                        <p className="text-gray-700">
-                          <span className="font-medium">Arrival:</span>{' '}
-                          {flight.arrivalTime}
-                        </p>
-                      </div>
+                    <div className="text-right">
+                      <p className="text-gray-300 text-lg font-semibold">
+                        ${flight.price}
+                      </p>
                       <button
-                        ref={index === 0 ? selectButtonRef : null} // Assign ref only to the first Select button
-                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                        ref={index === 0 ? selectButtonRef : null}
+                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
                       >
                         <Link href={`/results/flight/${flight.id}`}>
                           Select

@@ -7,7 +7,7 @@ const DepartureTimeFilter = forwardRef(
   ({departureTime, setDepartureTime}, ref) => {
     return (
       <div className="mb-4" ref={ref}>
-        <span className="block text-gray-700 font-medium mb-2">
+        <span className="block text-white font-medium mb-2">
           Departure Time
         </span>
         <div className="flex flex-col space-y-2">

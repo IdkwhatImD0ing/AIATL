@@ -6,7 +6,7 @@ import React, {forwardRef} from 'react'
 const PriceFilter = forwardRef(({priceRange, setPriceRange}, ref) => {
   return (
     <div className="mb-4" ref={ref}>
-      <label className="block text-gray-700 font-medium mb-2">
+      <label className="block text-white font-medium mb-2">
         Price Range ($)
       </label>
       <div className="flex space-x-2">

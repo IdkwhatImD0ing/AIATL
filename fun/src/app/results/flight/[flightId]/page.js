@@ -409,11 +409,11 @@ export default function FlightDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 relative">
-      <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow">
+    <div className="min-h-screen bg-gray-900 text-white p-4 relative">
+      <div className="max-w-3xl mx-auto bg-gray-800 p-6 rounded-lg shadow-lg">
         {/* Flight Details */}
-        <h2 className="text-2xl font-semibold mb-4">Flight Details</h2>
-        <div className="space-y-2">
+        <h2 className="text-3xl font-semibold mb-4">Flight Details</h2>
+        <div className="space-y-3 text-gray-300">
           <p>
             <span className="font-medium">Airline:</span> {flight.airline}
           </p>
@@ -443,16 +443,18 @@ export default function FlightDetails() {
 
         {/* Purchase Form */}
         <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-4">Purchase Flight</h3>
-          <PurchaseForm
-            onSubmit={handlePurchaseSubmit}
-            fullNameRef={fullNameRef}
-            emailRef={emailRef}
-            cardNumberRef={cardNumberRef}
-            expiryDateRef={expiryDateRef}
-            cvvRef={cvvRef}
-            confirmButtonRef={confirmButtonRef}
-          />
+          <h3 className="text-2xl font-semibold mb-4">Purchase Flight</h3>
+          <div className="bg-gray-700 p-6 rounded-lg shadow-inner">
+            <PurchaseForm
+              onSubmit={handlePurchaseSubmit}
+              fullNameRef={fullNameRef}
+              emailRef={emailRef}
+              cardNumberRef={cardNumberRef}
+              expiryDateRef={expiryDateRef}
+              cvvRef={cvvRef}
+              confirmButtonRef={confirmButtonRef}
+            />
+          </div>
         </div>
       </div>
 

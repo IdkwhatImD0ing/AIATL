@@ -6,6 +6,7 @@ import {useRouter} from 'next/navigation'
 import * as multimodal from '@nlxai/multimodal'
 import HighlightOverlay from '../components/HighlightOverlay'
 import SideWindow from '../components/SideWindow'
+import {motion} from 'framer-motion' // Import Framer Motion
 
 export default function Home() {
   const router = useRouter()
@@ -134,7 +135,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white relative overflow-hidden">
       {/* Highlight Overlay and Side Window */}
       {currentStep !== null &&
         currentStep < steps.length &&
@@ -158,32 +159,50 @@ export default function Home() {
           </>
         )}
 
-      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative z-10">
-        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Book Your Flight
-        </h1>
-        <form className="space-y-4" onSubmit={handleSubmit}>
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-900 to-gray-800 opacity-80"></div>
+
+      {/* Animated Heading */}
+      <motion.div
+        initial={{opacity: 0, y: -50}}
+        animate={{opacity: 1, y: 0}}
+        transition={{duration: 0.7}}
+        className="z-10 text-center mb-10"
+      >
+        <h1 className="text-5xl font-semibold mb-4">Easy Flights</h1>
+        <p className="text-lg text-gray-300">
+          Find cheap flights from your location to anywhere.
+        </p>
+      </motion.div>
+
+      {/* Animated Form Container */}
+      <motion.div
+        initial={{opacity: 0, scale: 0.95}}
+        animate={{opacity: 1, scale: 1}}
+        transition={{duration: 0.5}}
+        className="bg-gray-800 rounded-lg shadow-2xl p-8 w-full max-w-md z-10"
+      >
+        <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Location Input */}
           <div>
-            <label htmlFor="location" className="block text-gray-700">
-              Location
+            <label htmlFor="location" className="block text-gray-400 mb-2">
+              From
             </label>
             <input
               type="text"
               id="location"
               name="location"
-              placeholder="Enter destination"
+              placeholder="Enter departure location"
               value={formData.location}
               onChange={handleChange}
               ref={locationRef}
-              className="mt-1 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 border border-gray-700 rounded-md shadow-sm bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               required
             />
           </div>
 
           {/* Departure Date */}
           <div>
-            <label htmlFor="departure" className="block text-gray-700">
+            <label htmlFor="departure" className="block text-gray-400 mb-2">
               Departure Date
             </label>
             <input
@@ -193,14 +212,14 @@ export default function Home() {
               value={formData.departure}
               onChange={handleChange}
               ref={departureRef}
-              className="mt-1 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 border border-gray-700 rounded-md shadow-sm bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               required
             />
           </div>
 
           {/* Return Date */}
           <div>
-            <label htmlFor="return" className="block text-gray-700">
+            <label htmlFor="return" className="block text-gray-400 mb-2">
               Return Date
             </label>
             <input
@@ -210,22 +229,24 @@ export default function Home() {
               value={formData.return}
               onChange={handleChange}
               ref={returnRef}
-              className="mt-1 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 border border-gray-700 rounded-md shadow-sm bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             />
           </div>
 
           {/* Search Button */}
           <div>
-            <button
+            <motion.button
+              whileHover={{scale: 1.05}}
+              whileTap={{scale: 0.95}}
               type="submit"
               ref={searchButtonRef}
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
             >
               Search Flights
-            </button>
+            </motion.button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   )
 }

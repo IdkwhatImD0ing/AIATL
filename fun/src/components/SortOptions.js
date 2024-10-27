@@ -4,7 +4,7 @@ import React, {forwardRef} from 'react'
 const SortOptions = forwardRef(({sortOption, setSortOption}, ref) => {
   return (
     <div ref={ref}>
-      <label htmlFor="sort" className="block text-gray-700">
+      <label htmlFor="sort" className="block text-white">
         Sort By
       </label>
       <select
